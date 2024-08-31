@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BedIcon, UserIcon, XIcon, ArrowRightIcon, LogOutIcon } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { BedIcon, UserIcon, XIcon, ArrowRightIcon, LogOutIcon, AlertTriangleIcon, ArrowUpIcon, ArrowDownIcon } from 'lucide-react'
 
 type BedType = 'ICU' | 'General' | 'Pediatric'
 type Bed = {
@@ -23,12 +24,29 @@ const initialBeds: Bed[] = Array.from({ length: 120 }, (_, i) => ({
   patientId: null
 }))
 
+
+
 export default function Component() {
   const [beds, setBeds] = useState<Bed[]>(initialBeds)
   const [selectedType, setSelectedType] = useState<BedType>('ICU')
   const [patientQueue, setPatientQueue] = useState<string[]>([])
   const [newPatientId, setNewPatientId] = useState('')
   const [selectedBed, setSelectedBed] = useState<Bed | null>(null)
+  const [showQueueWarning, setShowQueueWarning] = useState(false)
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showQueueWarning) {
+      timer = setTimeout(() => {
+        setShowQueueWarning(false);
+      }, 5000);
+    }
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [showQueueWarning]);
 
   const addPatientToQueue = () => {
     if (newPatientId) {
@@ -90,6 +108,17 @@ export default function Component() {
     return { available, unavailable }
   }
 
+  const movePatientInQueue = (index: number, direction: 'up' | 'down') => {
+    setShowQueueWarning(true)
+    const newQueue = [...patientQueue]
+    if (direction === 'up' && index > 0) {
+      [newQueue[index - 1], newQueue[index]] = [newQueue[index], newQueue[index - 1]]
+    } else if (direction === 'down' && index < newQueue.length - 1) {
+      [newQueue[index], newQueue[index + 1]] = [newQueue[index + 1], newQueue[index]]
+    }
+    setPatientQueue(newQueue)
+  }
+
   const filteredBeds = beds.filter(bed => bed.type === selectedType)
   const availableBeds = filteredBeds.filter(bed => !bed.isOccupied).length
   const occupiedBeds = filteredBeds.length - availableBeds
@@ -104,8 +133,8 @@ export default function Component() {
               return (
                 <div key={type} className="bg-white p-4 rounded-lg shadow">
                   <h3 className="text-lg font-semibold mb-2">{type} Ward</h3>
-                  <p className="text-green-600 font-semibold">Available: {available}</p>
-                  <p className="text-red-600 font-semibold">Unavailable: {unavailable}</p>
+                  <p className="text-green-600">Available: {available}</p>
+                  <p className="text-red-600">Unavailable: {unavailable}</p>
                 </div>
               )
             })}
@@ -120,28 +149,28 @@ export default function Component() {
               <TabsContent key={type} value={type}>
                 <div className="mb-4">
                   <h2 className="text-2xl font-bold">Total Beds: {filteredBeds.length}</h2>
-                  <p className="text-green-600 font-semibold">Available: {availableBeds}</p>
-                  <p className="text-red-600 font-semibold">Occupied: {occupiedBeds}</p>
+                  <p className="text-green-600">Available: {availableBeds}</p>
+                  <p className="text-red-600">Occupied: {occupiedBeds}</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4 mb-4">
                   {filteredBeds.map((bed) => (
                     <Dialog key={bed.id}>
                       <DialogTrigger asChild>
                         <div 
-                          className={` p-2 border rounded cursor-pointer ${bed.isOccupied ? 'bg-red-100' : 'bg-green-100'}`}
+                          className={`p-2 border rounded cursor-pointer ${bed.isOccupied ? 'bg-red-100' : 'bg-green-100'}`}
                           onClick={() => setSelectedBed(bed)}
                         >
                           {bed.isOccupied ? (
                             <>
                               <BedIcon className="text-red-500" />
-                              <p className="text-xs font-semibold">Bed {bed.id}</p>
+                              <p className="text-xs">Bed {bed.id}</p>
                               <UserIcon className="text-red-500" />
                               <p className="text-xs">{bed.patientId}</p>
                             </>
                           ) : (
                             <>
                               <BedIcon className="text-green-500" />
-                              <p className="text-xs font-semibold">Bed {bed.id}</p>
+                              <p className="text-xs">Bed {bed.id}</p>
                               <Button 
                                 size="sm" 
                                 onClick={(e) => {
@@ -205,11 +234,40 @@ export default function Component() {
               />
               <Button onClick={addPatientToQueue}>Add</Button>
             </div>
+            {showQueueWarning && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTriangleIcon className="h-4 w-4" />
+                <AlertTitle>Warning</AlertTitle>
+                <AlertDescription>
+                  Changing the queue order may affect patient priority. Please ensure this action is authorized.
+                </AlertDescription>
+              </Alert>
+            )}
             <ul className="list-decimal pl-5">
               {patientQueue.map((patientId, index) => (
-                <li key={index} className="mb-1">
-                  {patientId}
-                  {index === 0 && <span className="ml-2 text-green-600 font-semibold">(Next)</span>}
+                <li key={index} className="mb-1 flex items-center justify-between">
+                  <span>
+                    {patientId}
+                    {index === 0 && <span className="ml-2 text-green-600 font-semibold">(Next)</span>}
+                  </span>
+                  <div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => movePatientInQueue(index, 'up')}
+                      disabled={index === 0}
+                    >
+                      <ArrowUpIcon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => movePatientInQueue(index, 'down')}
+                      disabled={index === patientQueue.length - 1}
+                    >
+                      <ArrowDownIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
