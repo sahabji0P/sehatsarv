@@ -14,12 +14,14 @@ datasource db {
 }
 
 model Patinets {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String?
+  age              Int?
+  gender           String?
+  medicalCondition String?
+  currentHospital  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Appointments {
@@ -40,11 +42,16 @@ model Doctors {
   speciality String
 }
 
-model Medicines {
-  id          String   @id @default(cuid())
+model Inventory {
+  id          String @id @default(cuid())
   name        String
   description String
   quantity    Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      Status @default(Adequate)
+}
+
+enum Status {
+  Low
+  Adequate
+  High
 }
