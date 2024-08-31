@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { AlertCircle, UserPlus, X } from 'lucide-react'
+import { AlertCircle, UserPlus, X, Edit } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type Patient = {
   id: string
@@ -25,7 +32,21 @@ type Patient = {
   contactNumber: string
   priority: 'Normal' | 'Emergency'
   symptoms: string
+  specialist: string
 }
+
+type Specialist = {
+  name: string
+  department: string
+}
+
+const specialists: Specialist[] = [
+  { name: "Dr. Smith", department: "Cardiology" },
+  { name: "Dr. Johnson", department: "Neurology" },
+  { name: "Dr. Williams", department: "Orthopedics" },
+  { name: "Dr. Brown", department: "Pediatrics" },
+  { name: "Dr. Jones", department: "Dermatology" },
+]
 
 export default function Component() {
   const [normalQueue, setNormalQueue] = useState<Patient[]>([])
@@ -36,9 +57,16 @@ export default function Component() {
     gender: '',
     contactNumber: '',
     priority: 'Normal',
-    symptoms: ''
+    symptoms: '',
+    specialist: ''
   })
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+  const [editMode, setEditMode] = useState(false)
+  const [specialistCounts, setSpecialistCounts] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    updateSpecialistCounts()
+  }, [normalQueue, emergencyQueue])
 
   const generateUniqueId = () => {
     return Math.random().toString(36).substr(2, 9).toUpperCase()
@@ -51,6 +79,10 @@ export default function Component() {
 
   const handlePriorityChange = (value: 'Normal' | 'Emergency') => {
     setNewPatient(prev => ({ ...prev, priority: value }))
+  }
+
+  const handleSpecialistChange = (value: string) => {
+    setNewPatient(prev => ({ ...prev, specialist: value }))
   }
 
   const handleAddPatient = () => {
@@ -66,8 +98,10 @@ export default function Component() {
       gender: '',
       contactNumber: '',
       priority: 'Normal',
-      symptoms: ''
+      symptoms: '',
+      specialist: ''
     })
+    updateSpecialistCounts()
   }
 
   const handleRemovePatient = (queue: 'Normal' | 'Emergency', id: string) => {
@@ -76,16 +110,38 @@ export default function Component() {
     } else {
       setEmergencyQueue(prev => prev.filter(patient => patient.id !== id))
     }
+    updateSpecialistCounts()
+  }
+
+  const handleUpdatePatient = (updatedPatient: Patient) => {
+    const updateQueue = (queue: Patient[]) =>
+      queue.map(patient => patient.id === updatedPatient.id ? updatedPatient : patient)
+
+    setNormalQueue(updateQueue)
+    setEmergencyQueue(updateQueue)
+    setSelectedPatient(updatedPatient)
+    setEditMode(false)
+    updateSpecialistCounts()
+  }
+
+  const updateSpecialistCounts = () => {
+    const counts: Record<string, number> = {}
+    specialists.forEach(specialist => {
+      counts[specialist.name] = [...normalQueue, ...emergencyQueue].filter(
+        patient => patient.specialist === specialist.name
+      ).length
+    })
+    setSpecialistCounts(counts)
   }
 
   const totalAppointments = normalQueue.length + emergencyQueue.length
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Hospital OPD Dashboard</h1>
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-2/3">
-          <Card className="mb-6">
+      <h1 className="text-3xl font-bold mb-6 p-4">OPD Dashboard</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Dashboard Summary</CardTitle>
             </CardHeader>
@@ -105,7 +161,7 @@ export default function Component() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className='shadow-lg'>
             <CardHeader>
               <CardTitle>Add New Patient</CardTitle>
             </CardHeader>
@@ -153,6 +209,21 @@ export default function Component() {
                     </div>
                   </RadioGroup>
                 </div>
+                <div>
+                  <Label htmlFor="specialist">Assign Specialist</Label>
+                  <Select onValueChange={handleSpecialistChange} value={newPatient.specialist}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a specialist" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {specialists.map((specialist) => (
+                        <SelectItem key={specialist.name} value={specialist.name}>
+                          {specialist.name} ({specialist.department}) - {specialistCounts[specialist.name] || 0} patients
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button type="button" onClick={handleAddPatient}>
                   <UserPlus className="mr-2 h-4 w-4" /> Add Patient
                 </Button>
@@ -160,8 +231,23 @@ export default function Component() {
             </CardContent>
           </Card>
         </div>
-        <div className="w-full lg:w-1/3 space-y-6">
-          <Card>
+        <div className="space-y-6">
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Specialist Assignments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[200px]">
+                {specialists.map((specialist) => (
+                  <div key={specialist.name} className="flex justify-between items-center mb-2 p-2 bg-gray-100 rounded">
+                    <span>{specialist.name} ({specialist.department})</span>
+                    <span className="font-semibold">{specialistCounts[specialist.name] || 0} patients</span>
+                  </div>
+                ))}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <AlertCircle className="mr-2 h-5 w-5 text-red-500" />
@@ -169,18 +255,28 @@ export default function Component() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[200px] lg:h-[300px]">
+              <ScrollArea className="h-[200px]">
                 {emergencyQueue.map((patient, index) => (
                   <div key={patient.id} className="flex justify-between items-center mb-2 p-2 bg-red-100 rounded">
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button variant="link" className="p-0" onClick={() => setSelectedPatient(patient)}>
+                        <Button variant="link" className="p-0" onClick={() => {
+                          setSelectedPatient(patient)
+                          setEditMode(false)
+                        }}>
                           <span className="font-bold">{index + 1}. </span>
                           {patient.name} (ID: {patient.id})
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
-                        <PatientDetails patient={selectedPatient} />
+                        <PatientDetails 
+                          patient={selectedPatient} 
+                          specialists={specialists}
+                          specialistCounts={specialistCounts}
+                          onUpdatePatient={handleUpdatePatient}
+                          editMode={editMode}
+                          setEditMode={setEditMode}
+                        />
                       </DialogContent>
                     </Dialog>
                     <Button variant="destructive" size="sm" onClick={() => handleRemovePatient('Emergency', patient.id)}>
@@ -191,23 +287,33 @@ export default function Component() {
               </ScrollArea>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Normal Queue</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[200px] lg:h-[300px]">
+              <ScrollArea className="h-[200px]">
                 {normalQueue.map((patient, index) => (
                   <div key={patient.id} className="flex justify-between items-center mb-2 p-2 bg-gray-100 rounded">
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button variant="link" className="p-0" onClick={() => setSelectedPatient(patient)}>
+                        <Button variant="link" className="p-0" onClick={() => {
+                          setSelectedPatient(patient)
+                          setEditMode(false)
+                        }}>
                           <span className="font-bold">{index + 1}. </span>
                           {patient.name} (ID: {patient.id})
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
-                        <PatientDetails patient={selectedPatient} />
+                        <PatientDetails 
+                          patient={selectedPatient} 
+                          specialists={specialists}
+                          specialistCounts={specialistCounts}
+                          onUpdatePatient={handleUpdatePatient}
+                          editMode={editMode}
+                          setEditMode={setEditMode}
+                        />
                       </DialogContent>
                     </Dialog>
                     <Button variant="destructive" size="sm" onClick={() => handleRemovePatient('Normal', patient.id)}>
@@ -224,45 +330,107 @@ export default function Component() {
   )
 }
 
-function PatientDetails({ patient }: { patient: Patient | null }) {
-  if (!patient) return null
+function PatientDetails({ 
+  patient, 
+  specialists, 
+  specialistCounts,
+  onUpdatePatient,
+  editMode,
+  setEditMode
+}: { 
+  patient: Patient | null, 
+  specialists: Specialist[], 
+  specialistCounts: Record<string, number>,
+  onUpdatePatient: (patient: Patient) => void,
+  editMode: boolean,
+  setEditMode: (mode: boolean) => void
+}) {
+  const [editedPatient, setEditedPatient] = useState<Patient | null>(null)
+
+  useEffect(() => {
+    setEditedPatient(patient)
+  }, [patient])
+
+  if (!editedPatient) return null
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setEditedPatient(prev => ({ ...prev!, [name]: value }))
+  }
+
+  const handleSpecialistChange = (value: string) => {
+    setEditedPatient(prev => ({ ...prev!, specialist: value }))
+  }
+
+  const handleSave = () => {
+    onUpdatePatient(editedPatient)
+  }
 
   return (
     <>
       <DialogHeader>
         <DialogTitle>Patient Details</DialogTitle>
-        <DialogDescription>ID: {patient.id}</DialogDescription>
+        <DialogDescription>ID: {editedPatient.id}</DialogDescription>
       </DialogHeader>
       <div className="grid gap-4 py-4">
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="name" className="text-right">
             Name
           </Label>
-          <Input id="name" value={patient.name} className="col-span-3" readOnly />
+          <Input
+            id="name"
+            name="name"
+            value={editedPatient.name}
+            onChange={handleInputChange}
+            className="col-span-3"
+            readOnly={!editMode}
+          />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="age" className="text-right">
             Age
           </Label>
-          <Input id="age" value={patient.age} className="col-span-3" readOnly />
+          <Input
+            id="age"
+            name="age"
+            type="number"
+            value={editedPatient.age}
+            onChange={handleInputChange}
+            className="col-span-3"
+            readOnly={!editMode}
+          />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="gender" className="text-right">
             Gender
           </Label>
-          <Input id="gender" value={patient.gender} className="col-span-3" readOnly />
+          <Input
+            id="gender"
+            name="gender"
+            value={editedPatient.gender}
+            onChange={handleInputChange}
+            className="col-span-3"
+            readOnly={!editMode}
+          />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="contact" className="text-right">
             Contact
           </Label>
-          <Input id="contact" value={patient.contactNumber} className="col-span-3" readOnly />
+          <Input
+            id="contact"
+            name="contactNumber"
+            value={editedPatient.contactNumber}
+            onChange={handleInputChange}
+            className="col-span-3"
+            readOnly={!editMode}
+          />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="priority" className="text-right">
             Priority
           </Label>
-          <Input id="priority" value={patient.priority} className="col-span-3" readOnly />
+          <Input id="priority" value={editedPatient.priority} className="col-span-3" readOnly />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="symptoms" className="text-right">
@@ -270,11 +438,43 @@ function PatientDetails({ patient }: { patient: Patient | null }) {
           </Label>
           <textarea
             id="symptoms"
-            value={patient.symptoms}
+            name="symptoms"
+            value={editedPatient.symptoms}
+            onChange={handleInputChange}
             className="col-span-3 w-full h-24 px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-            readOnly
+            readOnly={!editMode}
           />
         </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="specialist" className="text-right">
+            Specialist
+          </Label>
+          {editMode ? (
+            <Select onValueChange={handleSpecialistChange} value={editedPatient.specialist} disabled={!editMode}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select a specialist" />
+              </SelectTrigger>
+              <SelectContent>
+                {specialists.map((specialist) => (
+                  <SelectItem key={specialist.name} value={specialist.name}>
+                    {specialist.name} ({specialist.department}) - {specialistCounts[specialist.name] || 0} patients
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input id="specialist" value={editedPatient.specialist} className="col-span-3" readOnly />
+          )}
+        </div>
+      </div>
+      <div className="flex justify-end space-x-2">
+        {editMode ? (
+          <Button onClick={handleSave}>Save</Button>
+        ) : (
+          <Button onClick={() => setEditMode(true)}>
+            <Edit className="mr-2 h-4 w-4" /> Edit
+          </Button>
+        )}
       </div>
     </>
   )
