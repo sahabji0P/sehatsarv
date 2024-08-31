@@ -9,7 +9,7 @@ export default function Home() {
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-xl font-bold">SehatSarv</div>
           <div className="space-x-4">
-            <Link href="/dashboard" className="hover:text-blue-200">
+            <Link href="/hospital/D" className="hover:text-blue-200">
               Back to Dashboard
             </Link>
             <Link href="/admit" className="hover:text-blue-200">

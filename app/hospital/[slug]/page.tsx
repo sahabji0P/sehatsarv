@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function Component() {
   const [activePage, setActivePage] = useState("dashboard");
@@ -276,7 +277,8 @@ export default function Component() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button className="w-full">Admit New Patient</Button>
+            <Link href="/AddPatient">
+              <Button className="w-full">Admit New Patient</Button></Link>
               <Button className="w-full">Order Supplies</Button>
               <Button className="w-full">Request Medication Refill</Button>
             </CardContent>
