@@ -18,42 +18,42 @@ export default function Component() {
   const [activePage, setActivePage] = useState("dashboard");
   const [admittedPatients, setAdmittedPatients] = useState([
     {
-      name: "John Doe",
+      name: "AA",
       admissionDate: "2023-05-15",
       diagnosis: "Pneumonia",
     },
     {
-      name: "Jane Smith",
+      name: "L",
       admissionDate: "2023-05-12",
       diagnosis: "Appendicitis",
     },
     {
-      name: "Michael Johnson",
+      name: "MM",
       admissionDate: "2023-05-10",
       diagnosis: "Broken Leg",
     },
     {
-      name: "Emily Davis",
+      name: "sdf",
       admissionDate: "2023-05-08",
       diagnosis: "Influenza",
     },
     {
-      name: "David Lee",
+      name: "sofj",
       admissionDate: "2023-05-05",
       diagnosis: "Dehydration",
     },
     {
-      name: "Sarah Wilson",
+      name: "woej",
       admissionDate: "2023-05-03",
       diagnosis: "Asthma",
     },
     {
-      name: "Alex Thompson",
+      name: "skdf",
       admissionDate: "2023-05-01",
       diagnosis: "Concussion",
     },
     {
-      name: "Olivia Martinez",
+      name: "dakjf",
       admissionDate: "2023-04-28",
       diagnosis: "Gastroenteritis",
     },
@@ -112,13 +112,13 @@ export default function Component() {
               >
                 View Available Medications
               </Button>
+              <Link className="w-full" href={"/beds"}>
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => handlePageChange("availableBeds")}
               >
                 View Available Beds
-              </Button>
+              </Button></Link>
             </div>
           </section>
         )}
@@ -281,6 +281,8 @@ export default function Component() {
               <Button className="w-full">Admit New Patient</Button></Link>
               <Button className="w-full">Order Supplies</Button>
               <Button className="w-full">Request Medication Refill</Button>
+              <Link href={"/opd"}>
+              <Button className="w-full mt-4">OPD Dashboard</Button></Link>
             </CardContent>
           </Card>
           {activePage === "dashboard" && (
@@ -299,17 +301,17 @@ export default function Component() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell>John Doe</TableCell>
+                      <TableCell>SS</TableCell>
                       <TableCell>2023-05-15</TableCell>
                       <TableCell>Pneumonia</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell>Jane Smith</TableCell>
+                      <TableCell>An</TableCell>
                       <TableCell>2023-05-12</TableCell>
                       <TableCell>Appendicitis</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell>Michael Johnson</TableCell>
+                      <TableCell>Ni</TableCell>
                       <TableCell>2023-05-10</TableCell>
                       <TableCell>Broken Leg</TableCell>
                     </TableRow>
