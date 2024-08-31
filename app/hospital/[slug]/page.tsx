@@ -98,13 +98,13 @@ export default function Component() {
               >
                 View Admitted Patients
               </Button>
+              <Link href = "/Inventory " className="w-full">
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => handlePageChange("inventory")}
               >
                 View Inventory
-              </Button>
+              </Button></Link>
               <Button
                 variant="outline"
                 className="w-full"
