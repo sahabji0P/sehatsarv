@@ -1,6 +1,6 @@
 "use client";
-import Link from 'next/link';
-import PatientAdmissionForm from '../../components/admit_patients/patient_admin';
+import Link from "next/link";
+import PatientAdmissionForm from "../../components/admit_patients/patient_admin";
 
 export default function Home() {
   return (
