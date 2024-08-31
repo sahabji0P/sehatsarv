@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { BedIcon, UserIcon, XIcon, ArrowRightIcon, LogOutIcon } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { BedIcon, UserIcon, XIcon, ArrowRightIcon, LogOutIcon, AlertTriangleIcon, ArrowUpIcon, ArrowDownIcon } from 'lucide-react'
 
 type BedType = 'ICU' | 'General' | 'Pediatric'
 type Bed = {
@@ -22,12 +24,29 @@ const initialBeds: Bed[] = Array.from({ length: 120 }, (_, i) => ({
   patientId: null
 }))
 
+
+
 export default function Component() {
   const [beds, setBeds] = useState<Bed[]>(initialBeds)
   const [selectedType, setSelectedType] = useState<BedType>('ICU')
   const [patientQueue, setPatientQueue] = useState<string[]>([])
   const [newPatientId, setNewPatientId] = useState('')
   const [selectedBed, setSelectedBed] = useState<Bed | null>(null)
+  const [showQueueWarning, setShowQueueWarning] = useState(false)
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showQueueWarning) {
+      timer = setTimeout(() => {
+        setShowQueueWarning(false);
+      }, 5000);
+    }
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [showQueueWarning]);
 
   const addPatientToQueue = () => {
     if (newPatientId) {
@@ -66,12 +85,13 @@ export default function Component() {
   const movePatient = (bedId: number, newType: BedType) => {
     const bed = beds.find(b => b.id === bedId)
     if (bed && bed.patientId) {
-      deallocateBed(bedId)
       const availableBed = beds.find(b => b.type === newType && !b.isOccupied)
       if (availableBed) {
-        allocateBed(availableBed.id)
-      } else {
-        setPatientQueue(prevQueue => [bed.patientId!, ...prevQueue])
+        setBeds(beds.map(b => {
+          if (b.id === bedId) return { ...b, isOccupied: false, patientId: null }
+          if (b.id === availableBed.id) return { ...b, isOccupied: true, patientId: bed.patientId }
+          return b
+        }))
       }
     }
     setSelectedBed(null)
@@ -79,6 +99,24 @@ export default function Component() {
 
   const dischargePatient = (bedId: number) => {
     deallocateBed(bedId)
+  }
+
+  const getBedCounts = (type: BedType) => {
+    const typeBeds = beds.filter(bed => bed.type === type)
+    const available = typeBeds.filter(bed => !bed.isOccupied).length
+    const unavailable = typeBeds.length - available
+    return { available, unavailable }
+  }
+
+  const movePatientInQueue = (index: number, direction: 'up' | 'down') => {
+    setShowQueueWarning(true)
+    const newQueue = [...patientQueue]
+    if (direction === 'up' && index > 0) {
+      [newQueue[index - 1], newQueue[index]] = [newQueue[index], newQueue[index - 1]]
+    } else if (direction === 'down' && index < newQueue.length - 1) {
+      [newQueue[index], newQueue[index + 1]] = [newQueue[index + 1], newQueue[index]]
+    }
+    setPatientQueue(newQueue)
   }
 
   const filteredBeds = beds.filter(bed => bed.type === selectedType)
@@ -89,6 +127,18 @@ export default function Component() {
     <div className="container mx-auto p-4">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="lg:w-3/4">
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(['ICU', 'General', 'Pediatric'] as BedType[]).map((type) => {
+              const { available, unavailable } = getBedCounts(type)
+              return (
+                <div key={type} className="bg-white p-4 rounded-lg shadow">
+                  <h3 className="text-lg font-semibold mb-2">{type} Ward</h3>
+                  <p className="text-green-600">Available: {available}</p>
+                  <p className="text-red-600">Unavailable: {unavailable}</p>
+                </div>
+              )
+            })}
+          </div>
           <Tabs defaultValue="ICU" onValueChange={(value) => setSelectedType(value as BedType)}>
             <TabsList>
               <TabsTrigger value="ICU">ICU Beds</TabsTrigger>
@@ -99,8 +149,8 @@ export default function Component() {
               <TabsContent key={type} value={type}>
                 <div className="mb-4">
                   <h2 className="text-2xl font-bold">Total Beds: {filteredBeds.length}</h2>
-                  <p className="text-green-600 font-semibold">Available: {availableBeds}</p>
-                  <p className="text-red-600 font-semibold">Occupied: {occupiedBeds}</p>
+                  <p className="text-green-600">Available: {availableBeds}</p>
+                  <p className="text-red-600">Occupied: {occupiedBeds}</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4 mb-4">
                   {filteredBeds.map((bed) => (
@@ -135,22 +185,36 @@ export default function Component() {
                           )}
                         </div>
                       </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Bed {bed.id} Options</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex flex-col gap-2">
-                          <Button onClick={() => deallocateBed(bed.id)} className="flex items-center">
-                            <XIcon className="mr-2" /> Deallocate
-                          </Button>
-                          <Button onClick={() => movePatient(bed.id, bed.type === 'ICU' ? 'General' : 'ICU')} className="flex items-center">
-                            <ArrowRightIcon className="mr-2" /> Move to {bed.type === 'ICU' ? 'General' : 'ICU'}
-                          </Button>
-                          <Button onClick={() => dischargePatient(bed.id)} className="flex items-center">
-                            <LogOutIcon className="mr-2" /> Discharge
-                          </Button>
-                        </div>
-                      </DialogContent>
+                      {bed.isOccupied && (
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Bed {bed.id} Options</DialogTitle>
+                          </DialogHeader>
+                          <div className="flex flex-col gap-2">
+                            <Button onClick={() => deallocateBed(bed.id)} className="flex items-center">
+                              <XIcon className="mr-2" /> Deallocate
+                            </Button>
+                            <Select onValueChange={(value) => movePatient(bed.id, value as BedType)}>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Move patient to..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(['ICU', 'General', 'Pediatric'] as BedType[])
+                                  .filter(wardType => wardType !== bed.type)
+                                  .map(wardType => (
+                                    <SelectItem key={wardType} value={wardType}>
+                                      {wardType}
+                                    </SelectItem>
+                                  ))
+                                }
+                              </SelectContent>
+                            </Select>
+                            <Button onClick={() => dischargePatient(bed.id)} className="flex items-center">
+                              <LogOutIcon className="mr-2" /> Discharge
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      )}
                     </Dialog>
                   ))}
                 </div>
@@ -170,11 +234,40 @@ export default function Component() {
               />
               <Button onClick={addPatientToQueue}>Add</Button>
             </div>
+            {showQueueWarning && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTriangleIcon className="h-4 w-4" />
+                <AlertTitle>Warning</AlertTitle>
+                <AlertDescription>
+                  Changing the queue order may affect patient priority. Please ensure this action is authorized.
+                </AlertDescription>
+              </Alert>
+            )}
             <ul className="list-decimal pl-5">
               {patientQueue.map((patientId, index) => (
-                <li key={index} className="mb-1">
-                  {patientId}
-                  {index === 0 && <span className="ml-2 text-green-600 font-semibold">(Next)</span>}
+                <li key={index} className="mb-1 flex items-center justify-between">
+                  <span>
+                    {patientId}
+                    {index === 0 && <span className="ml-2 text-green-600 font-semibold">(Next)</span>}
+                  </span>
+                  <div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => movePatientInQueue(index, 'up')}
+                      disabled={index === 0}
+                    >
+                      <ArrowUpIcon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => movePatientInQueue(index, 'down')}
+                      disabled={index === patientQueue.length - 1}
+                    >
+                      <ArrowDownIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
