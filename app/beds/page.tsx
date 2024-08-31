@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BedIcon, UserIcon, XIcon, ArrowRightIcon, LogOutIcon } from 'lucide-react'
 
 type BedType = 'ICU' | 'General' | 'Pediatric'
@@ -66,12 +67,13 @@ export default function Component() {
   const movePatient = (bedId: number, newType: BedType) => {
     const bed = beds.find(b => b.id === bedId)
     if (bed && bed.patientId) {
-      deallocateBed(bedId)
       const availableBed = beds.find(b => b.type === newType && !b.isOccupied)
       if (availableBed) {
-        allocateBed(availableBed.id)
-      } else {
-        setPatientQueue(prevQueue => [bed.patientId!, ...prevQueue])
+        setBeds(beds.map(b => {
+          if (b.id === bedId) return { ...b, isOccupied: false, patientId: null }
+          if (b.id === availableBed.id) return { ...b, isOccupied: true, patientId: bed.patientId }
+          return b
+        }))
       }
     }
     setSelectedBed(null)
@@ -79,6 +81,13 @@ export default function Component() {
 
   const dischargePatient = (bedId: number) => {
     deallocateBed(bedId)
+  }
+
+  const getBedCounts = (type: BedType) => {
+    const typeBeds = beds.filter(bed => bed.type === type)
+    const available = typeBeds.filter(bed => !bed.isOccupied).length
+    const unavailable = typeBeds.length - available
+    return { available, unavailable }
   }
 
   const filteredBeds = beds.filter(bed => bed.type === selectedType)
@@ -89,6 +98,18 @@ export default function Component() {
     <div className="container mx-auto p-4">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="lg:w-3/4">
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(['ICU', 'General', 'Pediatric'] as BedType[]).map((type) => {
+              const { available, unavailable } = getBedCounts(type)
+              return (
+                <div key={type} className="bg-white p-4 rounded-lg shadow">
+                  <h3 className="text-lg font-semibold mb-2">{type} Ward</h3>
+                  <p className="text-green-600 font-semibold">Available: {available}</p>
+                  <p className="text-red-600 font-semibold">Unavailable: {unavailable}</p>
+                </div>
+              )
+            })}
+          </div>
           <Tabs defaultValue="ICU" onValueChange={(value) => setSelectedType(value as BedType)}>
             <TabsList>
               <TabsTrigger value="ICU">ICU Beds</TabsTrigger>
@@ -107,20 +128,20 @@ export default function Component() {
                     <Dialog key={bed.id}>
                       <DialogTrigger asChild>
                         <div 
-                          className={`p-2 border rounded cursor-pointer ${bed.isOccupied ? 'bg-red-100' : 'bg-green-100'}`}
+                          className={` p-2 border rounded cursor-pointer ${bed.isOccupied ? 'bg-red-100' : 'bg-green-100'}`}
                           onClick={() => setSelectedBed(bed)}
                         >
                           {bed.isOccupied ? (
                             <>
                               <BedIcon className="text-red-500" />
-                              <p className="text-xs">Bed {bed.id}</p>
+                              <p className="text-xs font-semibold">Bed {bed.id}</p>
                               <UserIcon className="text-red-500" />
                               <p className="text-xs">{bed.patientId}</p>
                             </>
                           ) : (
                             <>
                               <BedIcon className="text-green-500" />
-                              <p className="text-xs">Bed {bed.id}</p>
+                              <p className="text-xs font-semibold">Bed {bed.id}</p>
                               <Button 
                                 size="sm" 
                                 onClick={(e) => {
@@ -135,22 +156,36 @@ export default function Component() {
                           )}
                         </div>
                       </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Bed {bed.id} Options</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex flex-col gap-2">
-                          <Button onClick={() => deallocateBed(bed.id)} className="flex items-center">
-                            <XIcon className="mr-2" /> Deallocate
-                          </Button>
-                          <Button onClick={() => movePatient(bed.id, bed.type === 'ICU' ? 'General' : 'ICU')} className="flex items-center">
-                            <ArrowRightIcon className="mr-2" /> Move to {bed.type === 'ICU' ? 'General' : 'ICU'}
-                          </Button>
-                          <Button onClick={() => dischargePatient(bed.id)} className="flex items-center">
-                            <LogOutIcon className="mr-2" /> Discharge
-                          </Button>
-                        </div>
-                      </DialogContent>
+                      {bed.isOccupied && (
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Bed {bed.id} Options</DialogTitle>
+                          </DialogHeader>
+                          <div className="flex flex-col gap-2">
+                            <Button onClick={() => deallocateBed(bed.id)} className="flex items-center">
+                              <XIcon className="mr-2" /> Deallocate
+                            </Button>
+                            <Select onValueChange={(value) => movePatient(bed.id, value as BedType)}>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Move patient to..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(['ICU', 'General', 'Pediatric'] as BedType[])
+                                  .filter(wardType => wardType !== bed.type)
+                                  .map(wardType => (
+                                    <SelectItem key={wardType} value={wardType}>
+                                      {wardType}
+                                    </SelectItem>
+                                  ))
+                                }
+                              </SelectContent>
+                            </Select>
+                            <Button onClick={() => dischargePatient(bed.id)} className="flex items-center">
+                              <LogOutIcon className="mr-2" /> Discharge
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      )}
                     </Dialog>
                   ))}
                 </div>
