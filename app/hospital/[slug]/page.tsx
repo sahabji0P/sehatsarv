@@ -112,13 +112,13 @@ export default function Component() {
               >
                 View Available Medications
               </Button>
+              <Link className="w-full" href={"/beds"}>
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => handlePageChange("availableBeds")}
               >
                 View Available Beds
-              </Button>
+              </Button></Link>
             </div>
           </section>
         )}
@@ -281,6 +281,8 @@ export default function Component() {
               <Button className="w-full">Admit New Patient</Button></Link>
               <Button className="w-full">Order Supplies</Button>
               <Button className="w-full">Request Medication Refill</Button>
+              <Link href={"/opd"}>
+              <Button className="w-full mt-4">OPD Dashboard</Button></Link>
             </CardContent>
           </Card>
           {activePage === "dashboard" && (
