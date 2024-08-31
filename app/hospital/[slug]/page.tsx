@@ -31,7 +31,7 @@ export default function Component({ params }: { params: { slug: string } }) {
               <div className="text-2xl font-bold">245</div>
             </div>
             <Button variant="outline" size="sm">
-              View Details
+              View Admitted Patients
             </Button>
           </div>
           <div className="grid gap-2">
