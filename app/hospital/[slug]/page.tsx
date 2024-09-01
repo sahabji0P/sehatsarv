@@ -13,6 +13,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function Component() {
   const [activePage, setActivePage] = useState("dashboard");
@@ -38,6 +40,8 @@ export default function Component() {
         availableBeds: number;
       }[]
   >(null);
+
+  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     const fetchAdmittedPatients = async () => {
@@ -76,9 +80,23 @@ export default function Component() {
     setActivePage(page);
   };
 
+  const handleMedicationRefill = () => {
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 5000); // Hide alert after 5 seconds
+  };
+
   return (
     <div className="min-h-screen p-4 bg-gray-100">
       <div className="max-w-6xl mx-auto space-y-8">
+        {showAlert && (
+          <Alert variant="default">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Success</AlertTitle>
+            <AlertDescription>
+              The pharmacy has been alerted for medication refill.
+            </AlertDescription>
+          </Alert>
+        )}
         {activePage === "dashboard" && (
           <section className="p-4 bg-white rounded-md shadow-md">
             <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -188,8 +206,7 @@ export default function Component() {
               <Link href="/AddPatient">
                 <Button className="w-full">Admit New Patient</Button>
               </Link>
-              <Button className="w-full">Order Supplies</Button>
-              <Button className="w-full">Request Medication Refill</Button>
+              <Button className="w-full" onClick={handleMedicationRefill}>Request Medication Refill</Button>
               <Link href={"/opd"}>
                 <Button className="w-full mt-4">OPD Dashboard</Button>
               </Link>
