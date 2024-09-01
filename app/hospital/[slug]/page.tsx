@@ -31,6 +31,14 @@ export default function Component() {
       }[]
   >(null);
 
+  const [availableBeds, setAvailableBeds] = useState<
+    | null
+    | {
+        ward: string;
+        availableBeds: number;
+      }[]
+  >(null);
+
   useEffect(() => {
     const fetchAdmittedPatients = async () => {
       try {
@@ -46,7 +54,22 @@ export default function Component() {
       }
     };
 
+    const fetchAvailableBeds = async () => {
+      try {
+        const response = await fetch("/api/beds");
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableBeds(data);
+        } else {
+          console.error("Failed to fetch beds");
+        }
+      } catch (error) {
+        console.error("Error fetching beds:", error);
+      }
+    };
+
     fetchAdmittedPatients();
+    fetchAvailableBeds();
   }, []);
 
   const handlePageChange = (page: string) => {
@@ -76,8 +99,13 @@ export default function Component() {
                 <span>Available Medications</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold text-green-500">
-                  25 / 50
+                <span className="text-2xl font-bold">
+                  {availableBeds
+                    ? availableBeds.reduce(
+                        (total, bed) => total + bed.availableBeds,
+                        0
+                      )
+                    : 0}
                 </span>
                 <span>Available Beds</span>
               </div>
@@ -298,18 +326,13 @@ export default function Component() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell>Ward A</TableCell>
-                      <TableCell>15</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Ward B</TableCell>
-                      <TableCell>20</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Ward C</TableCell>
-                      <TableCell>10</TableCell>
-                    </TableRow>
+                    {availableBeds &&
+                      availableBeds.map((bed) => (
+                        <TableRow key={bed.ward}>
+                          <TableCell>{bed.ward}</TableCell>
+                          <TableCell>{bed.availableBeds}</TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </CardContent>

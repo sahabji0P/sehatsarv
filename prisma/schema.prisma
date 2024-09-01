@@ -51,6 +51,12 @@ model Inventory {
   status      Status @default(Adequate)
 }
 
+model AvailableBeds {
+  id            String @id @default(cuid())
+  totalBeds     Int
+  availableBeds Int
+}
+
 enum Status {
   Low
   Adequate
