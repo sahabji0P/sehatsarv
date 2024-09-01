@@ -102,13 +102,11 @@ export default function Component() {
               >
                 View Available Medications
               </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => handlePageChange("availableBeds")}
-              >
-                View Available Beds
-              </Button>
+              <Link href="/beds" className="w-full">
+                <Button variant="outline" className="w-full">
+                  View Available Beds
+                </Button>
+              </Link>
             </div>
           </section>
         )}

@@ -56,9 +56,8 @@ const PatientAdmissionForm = () => {
 
       // Convert age and contact to integers
       const ageAsNumber = parseInt(age, 10);
-      const contactAsNumber = parseInt(contact, 10);
 
-      if (isNaN(ageAsNumber) || isNaN(contactAsNumber)) {
+      if (isNaN(ageAsNumber)) {
         setErrorMessage("Age and Contact must be valid numbers.");
         return;
       }
@@ -67,7 +66,6 @@ const PatientAdmissionForm = () => {
       const dataToSubmit = {
         ...patientData,
         age: ageAsNumber, // Ensure age is a number
-        contact: contactAsNumber, // Ensure contact is a number
       };
 
       console.log("Submitting patient data:", dataToSubmit);
