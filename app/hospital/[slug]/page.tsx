@@ -43,6 +43,12 @@ export default function Component() {
 
   const [showAlert, setShowAlert] = useState(false);
 
+  const [availableDoctors, setAvailableDoctors] = useState([
+    { name: "Dr. Nikk", department: "Cardiology", appointments: 5 },
+    { name: "Dr. Anki ", department: "Pediatrics", appointments: 3 },
+    { name: "Dr. Swa", department: "Neurology", appointments: 7 },
+  ]);
+
   useEffect(() => {
     const fetchAdmittedPatients = async () => {
       try {
@@ -141,11 +147,7 @@ export default function Component() {
                   View Inventory
                 </Button>
               </Link>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => handlePageChange("availableMedications")}
-              >
+              <Button variant="outline" className="w-full">
                 View Available Medications
               </Button>
               <Link href={"/beds"} className="w-full">
@@ -206,7 +208,9 @@ export default function Component() {
               <Link href="/AddPatient">
                 <Button className="w-full">Admit New Patient</Button>
               </Link>
-              <Button className="w-full" onClick={handleMedicationRefill}>Request Medication Refill</Button>
+              <Button className="w-full" onClick={handleMedicationRefill}>
+                Request Medication Refill
+              </Button>
               <Link href={"/opd"}>
                 <Button className="w-full mt-4">OPD Dashboard</Button>
               </Link>
@@ -318,6 +322,33 @@ export default function Component() {
                         <Badge variant="default">Adequate</Badge>
                       </TableCell>
                     </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+          {activePage === "dashboard" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Available Doctors</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Appointments</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {availableDoctors.map((doctor, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{doctor.name}</TableCell>
+                        <TableCell>{doctor.department}</TableCell>
+                        <TableCell>{doctor.appointments}</TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </CardContent>
