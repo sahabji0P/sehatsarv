@@ -157,11 +157,11 @@ export default function Component() {
                   {admittedPatients &&
                     admittedPatients.map((patient) => (
                       <TableRow key={patient.id}>
-                        <TableCell>{patient.name}</TableCell>
+                        <TableCell>{patient.name || "Unknown"}</TableCell>
                         <TableCell>
                           {new Date(patient.admissionDate).toLocaleDateString()}
                         </TableCell>
-                        <TableCell>{patient.diagnosis}</TableCell>
+                        <TableCell>{patient.diagnosis || "N/A"}</TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
@@ -195,7 +195,7 @@ export default function Component() {
               </Link>
             </CardContent>
           </Card>
-          {activePage === "dashboard" && (
+          {activePage === "dashboard" && admittedPatients && (
             <Card>
               <CardHeader>
                 <CardTitle>Admitted Patients</CardTitle>
@@ -210,21 +210,15 @@ export default function Component() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell>SS</TableCell>
-                      <TableCell>2023-05-15</TableCell>
-                      <TableCell>Pneumonia</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>An</TableCell>
-                      <TableCell>2023-05-12</TableCell>
-                      <TableCell>Appendicitis</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Ni</TableCell>
-                      <TableCell>2023-05-10</TableCell>
-                      <TableCell>Broken Leg</TableCell>
-                    </TableRow>
+                    {admittedPatients.map((patient) => (
+                      <TableRow key={patient.id}>
+                        <TableCell>{patient.name || "Unknown"}</TableCell>
+                        <TableCell>
+                          {new Date(patient.admissionDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{patient.diagnosis || "N/A"}</TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -287,52 +281,26 @@ export default function Component() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell>Ibuprofen</TableCell>
+                      <TableCell>Paracetamol</TableCell>
                       <TableCell>200</TableCell>
                       <TableCell>
-                        <Badge variant="default">In Stock</Badge>
+                        <Badge variant="default">Adequate</Badge>
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell>Paracetamol</TableCell>
-                      <TableCell>150</TableCell>
-                      <TableCell>
-                        <Badge variant="default">In Stock</Badge>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Amoxicillin</TableCell>
-                      <TableCell>30</TableCell>
+                      <TableCell>Ibuprofen</TableCell>
+                      <TableCell>100</TableCell>
                       <TableCell>
                         <Badge variant="destructive">Low</Badge>
                       </TableCell>
                     </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
-          {activePage === "dashboard" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Beds</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
                     <TableRow>
-                      <TableHead>Ward</TableHead>
-                      <TableHead>Available Beds</TableHead>
+                      <TableCell>Amoxicillin</TableCell>
+                      <TableCell>75</TableCell>
+                      <TableCell>
+                        <Badge variant="default">Adequate</Badge>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {availableBeds &&
-                      availableBeds.map((bed) => (
-                        <TableRow key={bed.ward}>
-                          <TableCell>{bed.ward}</TableCell>
-                          <TableCell>{bed.availableBeds}</TableCell>
-                        </TableRow>
-                      ))}
                   </TableBody>
                 </Table>
               </CardContent>
