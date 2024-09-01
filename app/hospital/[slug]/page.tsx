@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -16,51 +16,43 @@ import Link from "next/link";
 
 export default function Component() {
   const [activePage, setActivePage] = useState("dashboard");
-  const [admittedPatients, setAdmittedPatients] = useState([
-    {
-      name: "AA",
-      admissionDate: "2023-05-15",
-      diagnosis: "Pneumonia",
-    },
-    {
-      name: "L",
-      admissionDate: "2023-05-12",
-      diagnosis: "Appendicitis",
-    },
-    {
-      name: "MM",
-      admissionDate: "2023-05-10",
-      diagnosis: "Broken Leg",
-    },
-    {
-      name: "sdf",
-      admissionDate: "2023-05-08",
-      diagnosis: "Influenza",
-    },
-    {
-      name: "sofj",
-      admissionDate: "2023-05-05",
-      diagnosis: "Dehydration",
-    },
-    {
-      name: "woej",
-      admissionDate: "2023-05-03",
-      diagnosis: "Asthma",
-    },
-    {
-      name: "skdf",
-      admissionDate: "2023-05-01",
-      diagnosis: "Concussion",
-    },
-    {
-      name: "dakjf",
-      admissionDate: "2023-04-28",
-      diagnosis: "Gastroenteritis",
-    },
-  ]);
-  const handlePageChange = (page: any) => {
+  const [admittedPatients, setAdmittedPatients] = useState<
+    | null
+    | {
+        id: string;
+        name: string | null;
+        age: number | null;
+        gender: string | null;
+        address: string | null;
+        diagnosis: string | null;
+        currentHospital: string | null;
+        contact: string | null;
+        admissionDate: Date;
+      }[]
+  >(null);
+
+  useEffect(() => {
+    const fetchAdmittedPatients = async () => {
+      try {
+        const response = await fetch("/api/patients");
+        if (response.ok) {
+          const data = await response.json();
+          setAdmittedPatients(data);
+        } else {
+          console.error("Failed to fetch patients");
+        }
+      } catch (error) {
+        console.error("Error fetching patients:", error);
+      }
+    };
+
+    fetchAdmittedPatients();
+  }, []);
+
+  const handlePageChange = (page: string) => {
     setActivePage(page);
   };
+
   return (
     <div className="min-h-screen p-4 bg-gray-100">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -71,7 +63,7 @@ export default function Component() {
             <div className="flex items-center justify-between mt-4 space-x-4">
               <div className="flex flex-col items-center">
                 <span className="text-2xl font-bold">
-                  {admittedPatients.length}
+                  {admittedPatients ? admittedPatients.length : 0}
                 </span>
                 <span>Admitted Patients</span>
               </div>
@@ -98,13 +90,11 @@ export default function Component() {
               >
                 View Admitted Patients
               </Button>
-              <Link href = "/Inventory " className="w-full">
-              <Button
-                variant="outline"
-                className="w-full"
-              >
-                View Inventory
-              </Button></Link>
+              <Link href="/Inventory" className="w-full">
+                <Button variant="outline" className="w-full">
+                  View Inventory
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 className="w-full"
@@ -112,13 +102,11 @@ export default function Component() {
               >
                 View Available Medications
               </Button>
-              <Link className="w-full" href={"/beds"}>
-              <Button
-                variant="outline"
-                className="w-full"
-              >
-                View Available Beds
-              </Button></Link>
+              <Link href={"/beds"} className="w-full">
+                <Button variant="outline" className="w-full">
+                  View Available Beds
+                </Button>
+              </Link>
             </div>
           </section>
         )}
@@ -138,13 +126,16 @@ export default function Component() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {admittedPatients.map((patient, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{patient.name}</TableCell>
-                      <TableCell>{patient.admissionDate}</TableCell>
-                      <TableCell>{patient.diagnosis}</TableCell>
-                    </TableRow>
-                  ))}
+                  {admittedPatients &&
+                    admittedPatients.map((patient) => (
+                      <TableRow key={patient.id}>
+                        <TableCell>{patient.name}</TableCell>
+                        <TableCell>
+                          {new Date(patient.admissionDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{patient.diagnosis}</TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </div>
@@ -159,130 +150,21 @@ export default function Component() {
             </div>
           </section>
         )}
-        {activePage === "inventory" && (
-          <section className="p-4 bg-white rounded-md shadow-md">
-            <h1 className="text-2xl font-bold">Inventory</h1>
-            <p className="text-muted-foreground">Current stock levels</p>
-            <div className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>Surgical Masks</TableCell>
-                    <TableCell>120</TableCell>
-                    <TableCell>
-                      <Badge variant="destructive">Low</Badge>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Nitrile Gloves</TableCell>
-                    <TableCell>300</TableCell>
-                    <TableCell>
-                      <Badge variant="default">Adequate</Badge>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Bandages</TableCell>
-                    <TableCell>50</TableCell>
-                    <TableCell>
-                      <Badge variant="destructive">Low</Badge>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-            <div className="flex justify-between mt-4 space-x-4">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => handlePageChange("dashboard")}
-              >
-                Back to Dashboard
-              </Button>
-            </div>
-          </section>
-        )}
-        {activePage === "availableMedications" && (
-          <section className="p-4 bg-white rounded-md shadow-md">
-            <h1 className="text-2xl font-bold">Available Medications</h1>
-            <p className="text-muted-foreground">In-stock medications</p>
-            <div className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Medication</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Expiration</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>Ibuprofen</TableCell>
-                    <TableCell>500</TableCell>
-                    <TableCell>2024-06-30</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Amoxicillin</TableCell>
-                    <TableCell>300</TableCell>
-                    <TableCell>2023-12-31</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-            <div className="flex justify-between mt-4 space-x-4">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => handlePageChange("dashboard")}
-              >
-                Back to Dashboard
-              </Button>
-            </div>
-          </section>
-        )}
-        {activePage === "availableBeds" && (
-          <section className="p-4 bg-white rounded-md shadow-md">
-            <h1 className="text-2xl font-bold">Available Beds</h1>
-            <p className="text-muted-foreground">Current bed capacity</p>
-            <div className="mt-4 space-y-4">
-              <div className="flex justify-between">
-                <span>General Wards</span>
-                <span className="text-green-500">20 / 30</span>
-              </div>
-              <div className="flex justify-between">
-                <span>ICU</span>
-                <span className="text-red-500">5 / 10</span>
-              </div>
-            </div>
-            <div className="flex justify-between mt-4 space-x-4">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => handlePageChange("dashboard")}
-              >
-                Back to Dashboard
-              </Button>
-            </div>
-          </section>
-        )}
+        {/* Other pages go here */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-            <Link href="/AddPatient">
-              <Button className="w-full">Admit New Patient</Button></Link>
+              <Link href="/AddPatient">
+                <Button className="w-full">Admit New Patient</Button>
+              </Link>
               <Button className="w-full">Order Supplies</Button>
               <Button className="w-full">Request Medication Refill</Button>
               <Link href={"/opd"}>
-              <Button className="w-full mt-4">OPD Dashboard</Button></Link>
+                <Button className="w-full mt-4">OPD Dashboard</Button>
+              </Link>
             </CardContent>
           </Card>
           {activePage === "dashboard" && (
@@ -372,19 +254,30 @@ export default function Component() {
                     <TableRow>
                       <TableHead>Medication</TableHead>
                       <TableHead>Quantity</TableHead>
-                      <TableHead>Expiration</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <TableRow>
                       <TableCell>Ibuprofen</TableCell>
-                      <TableCell>500</TableCell>
-                      <TableCell>2024-06-30</TableCell>
+                      <TableCell>200</TableCell>
+                      <TableCell>
+                        <Badge variant="default">In Stock</Badge>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Paracetamol</TableCell>
+                      <TableCell>150</TableCell>
+                      <TableCell>
+                        <Badge variant="default">In Stock</Badge>
+                      </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Amoxicillin</TableCell>
-                      <TableCell>300</TableCell>
-                      <TableCell>2023-12-31</TableCell>
+                      <TableCell>30</TableCell>
+                      <TableCell>
+                        <Badge variant="destructive">Low</Badge>
+                      </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -397,16 +290,28 @@ export default function Component() {
                 <CardTitle>Available Beds</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="mt-4 space-y-4">
-                  <div className="flex justify-between">
-                    <span>General Wards</span>
-                    <span className="text-green-500">20 / 30</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>ICU</span>
-                    <span className="text-red-500">5 / 10</span>
-                  </div>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ward</TableHead>
+                      <TableHead>Available Beds</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>Ward A</TableCell>
+                      <TableCell>15</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Ward B</TableCell>
+                      <TableCell>20</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Ward C</TableCell>
+                      <TableCell>10</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           )}
