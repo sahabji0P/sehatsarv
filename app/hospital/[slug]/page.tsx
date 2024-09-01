@@ -13,6 +13,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function Component() {
   const [activePage, setActivePage] = useState("dashboard");
@@ -31,6 +33,16 @@ export default function Component() {
       }[]
   >(null);
 
+  const [availableBeds, setAvailableBeds] = useState<
+    | null
+    | {
+        ward: string;
+        availableBeds: number;
+      }[]
+  >(null);
+
+  const [showAlert, setShowAlert] = useState(false);
+
   useEffect(() => {
     const fetchAdmittedPatients = async () => {
       try {
@@ -46,16 +58,45 @@ export default function Component() {
       }
     };
 
+    const fetchAvailableBeds = async () => {
+      try {
+        const response = await fetch("/api/beds");
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableBeds(data);
+        } else {
+          console.error("Failed to fetch beds");
+        }
+      } catch (error) {
+        console.error("Error fetching beds:", error);
+      }
+    };
+
     fetchAdmittedPatients();
+    fetchAvailableBeds();
   }, []);
 
   const handlePageChange = (page: string) => {
     setActivePage(page);
   };
 
+  const handleMedicationRefill = () => {
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 5000); // Hide alert after 5 seconds
+  };
+
   return (
     <div className="min-h-screen p-4 bg-gray-100">
       <div className="max-w-6xl mx-auto space-y-8">
+        {showAlert && (
+          <Alert variant="default">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Success</AlertTitle>
+            <AlertDescription>
+              The pharmacy has been alerted for medication refill.
+            </AlertDescription>
+          </Alert>
+        )}
         {activePage === "dashboard" && (
           <section className="p-4 bg-white rounded-md shadow-md">
             <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -76,8 +117,13 @@ export default function Component() {
                 <span>Available Medications</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold text-green-500">
-                  25 / 50
+                <span className="text-2xl font-bold">
+                  {availableBeds
+                    ? availableBeds.reduce(
+                        (total, bed) => total + bed.availableBeds,
+                        0
+                      )
+                    : 0}
                 </span>
                 <span>Available Beds</span>
               </div>
@@ -129,11 +175,11 @@ export default function Component() {
                   {admittedPatients &&
                     admittedPatients.map((patient) => (
                       <TableRow key={patient.id}>
-                        <TableCell>{patient.name}</TableCell>
+                        <TableCell>{patient.name || "Unknown"}</TableCell>
                         <TableCell>
                           {new Date(patient.admissionDate).toLocaleDateString()}
                         </TableCell>
-                        <TableCell>{patient.diagnosis}</TableCell>
+                        <TableCell>{patient.diagnosis || "N/A"}</TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
@@ -160,14 +206,13 @@ export default function Component() {
               <Link href="/AddPatient">
                 <Button className="w-full">Admit New Patient</Button>
               </Link>
-              <Button className="w-full">Order Supplies</Button>
-              <Button className="w-full">Request Medication Refill</Button>
+              <Button className="w-full" onClick={handleMedicationRefill}>Request Medication Refill</Button>
               <Link href={"/opd"}>
                 <Button className="w-full mt-4">OPD Dashboard</Button>
               </Link>
             </CardContent>
           </Card>
-          {activePage === "dashboard" && (
+          {activePage === "dashboard" && admittedPatients && (
             <Card>
               <CardHeader>
                 <CardTitle>Admitted Patients</CardTitle>
@@ -182,21 +227,15 @@ export default function Component() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell>SS</TableCell>
-                      <TableCell>2023-05-15</TableCell>
-                      <TableCell>Pneumonia</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>An</TableCell>
-                      <TableCell>2023-05-12</TableCell>
-                      <TableCell>Appendicitis</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Ni</TableCell>
-                      <TableCell>2023-05-10</TableCell>
-                      <TableCell>Broken Leg</TableCell>
-                    </TableRow>
+                    {admittedPatients.map((patient) => (
+                      <TableRow key={patient.id}>
+                        <TableCell>{patient.name || "Unknown"}</TableCell>
+                        <TableCell>
+                          {new Date(patient.admissionDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{patient.diagnosis || "N/A"}</TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -259,56 +298,25 @@ export default function Component() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell>Ibuprofen</TableCell>
+                      <TableCell>Paracetamol</TableCell>
                       <TableCell>200</TableCell>
                       <TableCell>
-                        <Badge variant="default">In Stock</Badge>
+                        <Badge variant="default">Adequate</Badge>
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell>Paracetamol</TableCell>
-                      <TableCell>150</TableCell>
-                      <TableCell>
-                        <Badge variant="default">In Stock</Badge>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Amoxicillin</TableCell>
-                      <TableCell>30</TableCell>
+                      <TableCell>Ibuprofen</TableCell>
+                      <TableCell>100</TableCell>
                       <TableCell>
                         <Badge variant="destructive">Low</Badge>
                       </TableCell>
                     </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
-          {activePage === "dashboard" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Beds</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
                     <TableRow>
-                      <TableHead>Ward</TableHead>
-                      <TableHead>Available Beds</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>Ward A</TableCell>
-                      <TableCell>15</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Ward B</TableCell>
-                      <TableCell>20</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Ward C</TableCell>
-                      <TableCell>10</TableCell>
+                      <TableCell>Amoxicillin</TableCell>
+                      <TableCell>75</TableCell>
+                      <TableCell>
+                        <Badge variant="default">Adequate</Badge>
+                      </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
