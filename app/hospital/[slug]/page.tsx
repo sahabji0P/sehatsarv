@@ -16,7 +16,6 @@ import Link from "next/link";
 
 export default function Component() {
   const [activePage, setActivePage] = useState("dashboard");
-<<<<<<< HEAD
   const [admittedPatients, setAdmittedPatients] = useState<
     | null
     | {
@@ -51,51 +50,6 @@ export default function Component() {
   }, []);
 
   const handlePageChange = (page: string) => {
-=======
-  const [admittedPatients, setAdmittedPatients] = useState([
-    {
-      name: "AA",
-      admissionDate: "2023-05-15",
-      diagnosis: "Pneumonia",
-    },
-    {
-      name: "L",
-      admissionDate: "2023-05-12",
-      diagnosis: "Appendicitis",
-    },
-    {
-      name: "MM",
-      admissionDate: "2023-05-10",
-      diagnosis: "Broken Leg",
-    },
-    {
-      name: "sdf",
-      admissionDate: "2023-05-08",
-      diagnosis: "Influenza",
-    },
-    {
-      name: "sofj",
-      admissionDate: "2023-05-05",
-      diagnosis: "Dehydration",
-    },
-    {
-      name: "woej",
-      admissionDate: "2023-05-03",
-      diagnosis: "Asthma",
-    },
-    {
-      name: "skdf",
-      admissionDate: "2023-05-01",
-      diagnosis: "Concussion",
-    },
-    {
-      name: "dakjf",
-      admissionDate: "2023-04-28",
-      diagnosis: "Gastroenteritis",
-    },
-  ]);
-  const handlePageChange = (page: any) => {
->>>>>>> origin/main
     setActivePage(page);
   };
 
@@ -148,21 +102,11 @@ export default function Component() {
               >
                 View Available Medications
               </Button>
-<<<<<<< HEAD
-              <Link href="/beds" className="w-full">
+              <Link href={"/beds"} className="w-full">
                 <Button variant="outline" className="w-full">
                   View Available Beds
                 </Button>
               </Link>
-=======
-              <Link className="w-full" href={"/beds"}>
-              <Button
-                variant="outline"
-                className="w-full"
-              >
-                View Available Beds
-              </Button></Link>
->>>>>>> origin/main
             </div>
           </section>
         )}
@@ -219,7 +163,8 @@ export default function Component() {
               <Button className="w-full">Order Supplies</Button>
               <Button className="w-full">Request Medication Refill</Button>
               <Link href={"/opd"}>
-              <Button className="w-full mt-4">OPD Dashboard</Button></Link>
+                <Button className="w-full mt-4">OPD Dashboard</Button>
+              </Link>
             </CardContent>
           </Card>
           {activePage === "dashboard" && (
