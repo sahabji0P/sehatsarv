@@ -60,7 +60,7 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-14 flex items-center">
         <Link className="flex items-center justify-center" href="#">
-          <Hospital className="h-6 w-6" />
+          <Hospital className="h-6 w-6" /> <p className='font-bold ml-2 mt-1'>Sehat Sarv</p>
           <span className="sr-only">Centralized Hospital System</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
@@ -84,7 +84,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  Welcome to the Centralized Hospital System
+                  Welcome to the Sehat Sarv Hospital System
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
                   Your one-stop platform for managing healthcare needs, booking appointments, and accessing medical information.
@@ -184,7 +184,7 @@ export default function LandingPage() {
                           <Tabs defaultValue="specialist" className="w-full">
                             <TabsList className="grid w-full grid-cols-3">
                               <TabsTrigger value="specialist">Specialist</TabsTrigger>
-                              <TabsTrigger value="primary">Primary Care</TabsTrigger>
+                              <TabsTrigger value="primary">Book Online Care</TabsTrigger>
                               <TabsTrigger value="opd">OPD</TabsTrigger>
                             </TabsList>
                             <TabsContent value="specialist">

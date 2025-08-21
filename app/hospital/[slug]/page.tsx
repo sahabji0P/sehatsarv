@@ -115,7 +115,7 @@ export default function Component() {
                 <span>Admitted Patients</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold text-red-500">12 / 45</span>
+                <span className="text-2xl font-bold text-red-500">12</span>
                 <span>Inventory</span>
               </div>
               <div className="flex flex-col items-center">
